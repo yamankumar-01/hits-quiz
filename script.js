@@ -544,24 +544,6 @@ document.addEventListener('DOMContentLoaded', () => {
     requestAnimationFrame(animate);
   }
 
-  // Retake Quiz Reset
-  function retakeQuiz() {
-    state.currentIndex = 0;
-    state.answers = {};
-    state.flagged.clear();
-    state.timeSeconds = 0;
-    state.timerActive = true;
-    state.quizFinished = false;
-
-    el.resultsScreen.style.display = 'none';
-    el.quizCard.style.display = 'flex';
-    document.querySelector('.stats-ribbon').style.display = 'flex';
-    document.querySelector('.palette-container').style.display = 'flex';
-
-    buildPalette();
-    renderQuestion();
-  }
-
   // Attach Event Listeners
   function attachEventListeners() {
     // Name submission from modal
@@ -663,15 +645,6 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       finishQuiz();
     });
-
-    // Retake Quiz
-    const retakeBtn = document.getElementById('retakeBtn');
-    if (retakeBtn) {
-      retakeBtn.addEventListener('click', () => {
-        playSound('click');
-        retakeQuiz();
-      });
-    }
 
     // Print / Save Scorecard
     const printBtn = document.getElementById('printBtn');
