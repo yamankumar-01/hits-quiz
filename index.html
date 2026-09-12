@@ -34,24 +34,28 @@
 
       <!-- Controls: Language, Mode, Audio, Theme -->
       <div class="header-controls">
-        <!-- Language Switcher -->
-        <div class="segmented-control" role="group" aria-label="Language Selector">
-          <button class="seg-btn active" data-lang="bi">🌐 Dual (दोनों)</button>
-          <button class="seg-btn" data-lang="hi">🇮🇳 हिंदी</button>
-          <button class="seg-btn" data-lang="en">🇬🇧 English</button>
+        <div class="controls-pill-group">
+          <!-- Language Switcher -->
+          <div class="segmented-control" role="group" aria-label="Language Selector">
+            <button class="seg-btn active" data-lang="bi">🌐 Dual</button>
+            <button class="seg-btn" data-lang="hi">🇮🇳 हिंदी</button>
+            <button class="seg-btn" data-lang="en">🇬🇧 Eng</button>
+          </div>
+
+          <!-- Mode Switcher -->
+          <div class="segmented-control" role="group" aria-label="Mode Selector">
+            <button class="seg-btn active" data-mode="practice" title="Get instant explanations after selecting an answer">⚡ Practice</button>
+            <button class="seg-btn" data-mode="exam" title="Take as timed exam, see score at the end">📝 Exam</button>
+          </div>
         </div>
 
-        <!-- Mode Switcher -->
-        <div class="segmented-control" role="group" aria-label="Mode Selector">
-          <button class="seg-btn active" data-mode="practice" title="Get instant explanations after selecting an answer">⚡ Practice</button>
-          <button class="seg-btn" data-mode="exam" title="Take as timed exam, see score at the end">📝 Exam</button>
+        <div class="controls-icon-group">
+          <!-- Audio Synthesizer Toggle -->
+          <button id="soundToggle" class="icon-btn" title="Toggle Sound Effects" aria-label="Toggle Sound">🔊</button>
+
+          <!-- Dark/Light Theme Toggle -->
+          <button id="themeToggle" class="icon-btn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">🌙</button>
         </div>
-
-        <!-- Audio Synthesizer Toggle -->
-        <button id="soundToggle" class="icon-btn" title="Toggle Sound Effects" aria-label="Toggle Sound">🔊</button>
-
-        <!-- Dark/Light Theme Toggle -->
-        <button id="themeToggle" class="icon-btn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">🌙</button>
       </div>
     </header>
 
@@ -67,14 +71,16 @@
         </div>
       </div>
 
-      <div class="timer-badge" title="Time elapsed">
-        <span>⏱️</span>
-        <span id="timerDisplay">00:00</span>
-      </div>
+      <div class="stats-badges">
+        <div class="timer-badge" title="Time elapsed">
+          <span>⏱️</span>
+          <span id="timerDisplay">00:00</span>
+        </div>
 
-      <div class="score-badge" id="scoreBadge" title="Current Score (Practice Mode)">
-        <span>🎯</span>
-        <span id="scoreText">0/10 Correct</span>
+        <div class="score-badge" id="scoreBadge" title="Current Score (Practice Mode)">
+          <span>🎯</span>
+          <span id="scoreText">0/10 Correct</span>
+        </div>
       </div>
     </section>
 
@@ -113,15 +119,15 @@
       <!-- Navigation & Action Buttons -->
       <div class="card-actions">
         <button class="btn btn-secondary" id="prevBtn" disabled>
-          ← Previous (पिछला)
+          ← Prev (पिछला)
         </button>
 
-        <div style="display: flex; gap: 0.75rem;">
+        <div class="nav-right-actions">
           <button class="btn btn-primary" id="nextBtn">
             Next (अगला) →
           </button>
           <button class="btn btn-success" id="submitBtn" style="display: none;">
-            Submit Quiz (परिणाम देखें) 🚀
+            Submit Quiz 🚀
           </button>
         </div>
       </div>
