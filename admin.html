@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="hi" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>👑 Admin Dashboard - HITS Quiz | स्कोर व सबमिशन रिकॉर्ड</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .admin-container {
+      max-width: 1050px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem 1rem 3rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .admin-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1.25rem 1.5rem;
+      background: var(--card-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+    }
+
+    .admin-title-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .admin-logo {
+      width: 46px;
+      height: 46px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.35);
+    }
+
+    .summary-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+    }
+
+    .stat-card {
+      background: var(--card-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-md);
+      padding: 1.25rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .stat-val {
+      font-size: 1.8rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    .stat-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
+    .admin-table-card {
+      background: var(--card-bg);
+      backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius-lg);
+      padding: 1.5rem;
+      box-shadow: var(--shadow-md);
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .table-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.85rem;
+    }
+
+    .search-input {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--card-border);
+      color: var(--text-main);
+      padding: 0.6rem 1rem;
+      border-radius: var(--radius-full);
+      font-size: 0.88rem;
+      width: 280px;
+      max-width: 100%;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 10px var(--primary-glow);
+    }
+
+    .table-wrapper {
+      overflow-x: auto;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--card-border);
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    .data-table th {
+      background: rgba(255, 255, 255, 0.04);
+      padding: 0.9rem 1rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    .data-table td {
+      padding: 0.9rem 1rem;
+      border-bottom: 1px solid var(--card-border);
+      white-space: nowrap;
+    }
+
+    .data-table tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      padding: 0.25rem 0.65rem;
+      border-radius: var(--radius-full);
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+    .status-pass {
+      background: var(--success-light);
+      color: var(--success);
+      border: 1px solid var(--success-border);
+    }
+
+    .status-review {
+      background: var(--warning-light);
+      color: var(--warning);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1rem;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      .summary-cards-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .admin-container {
+        padding: 1rem 0.65rem 2rem;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .summary-cards-grid {
+        grid-template-columns: 1fr;
+      }
+      .table-top-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .search-input {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Background animated glow orbs -->
+  <div class="bg-decorations" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+  </div>
+
+  <main class="admin-container">
+    <!-- Header -->
+    <header class="admin-header">
+      <div class="admin-title-wrap">
+        <div class="admin-logo">👑</div>
+        <div>
+          <h1 style="font-size: 1.35rem; font-weight: 800;">HITS Quiz - Admin Panel</h1>
+          <p style="font-size: 0.8rem; color: var(--text-muted);">छात्रों के स्कोर, समय व सबमिशन रिकॉर्ड्स का प्रबंधन</p>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap;">
+        <button id="themeToggle" class="icon-btn" title="Toggle Theme">🌙</button>
+        <a href="index.html" class="btn btn-secondary" style="text-decoration: none;">
+          ← Take Quiz (क्विज़ पर जाएँ)
+        </a>
+      </div>
+    </header>
+
+    <!-- Stat Cards -->
+    <section class="summary-cards-grid">
+      <div class="stat-card">
+        <span class="stat-val" id="statTotalUsers" style="color: var(--primary);">0</span>
+        <span class="stat-label">Total Submissions (कुल छात्र)</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="statAvgScore" style="color: var(--accent);">0%</span>
+        <span class="stat-label">Average Score (औसत स्कोर)</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="statHighestScore" style="color: var(--success);">0/10</span>
+        <span class="stat-label">Top Score (उच्चतम स्कोर)</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-val" id="statAvgTime" style="color: var(--warning);">00:00</span>
+        <span class="stat-label">Avg Time Taken (औसत समय)</span>
+      </div>
+    </section>
+
+    <!-- Submissions Table Card -->
+    <section class="admin-table-card">
+      <div class="table-top-bar">
+        <div>
+          <h2 style="font-size: 1.15rem; font-weight: 800;">Candidate Submissions (सबमिशन सूची)</h2>
+          <span style="font-size: 0.78rem; color: var(--text-muted);" id="tableCountText">Showing 0 records</span>
+        </div>
+
+        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+          <input type="text" id="searchInput" class="search-input" placeholder="🔍 Search candidate name...">
+          <button id="exportCsvBtn" class="btn btn-primary" style="font-size: 0.82rem; padding: 0.55rem 1rem;">
+            📥 Export CSV
+          </button>
+          <button id="clearDataBtn" class="btn btn-secondary" style="font-size: 0.82rem; padding: 0.55rem 0.9rem; color: var(--danger);">
+            🗑️ Clear All
+          </button>
+        </div>
+      </div>
+
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Candidate Name (नाम)</th>
+              <th>Score (अंक)</th>
+              <th>Percentage</th>
+              <th>Time Taken (लिया गया समय)</th>
+              <th>Submitted At (सबमिशन समय)</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="submissionsTableBody">
+            <!-- Populated via script -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="emptyState" class="empty-state" style="display: none;">
+        <p style="font-size: 1.5rem; margin-bottom: 0.5rem;">📭</p>
+        <p style="font-weight: 700;">कोई सबमिशन रिकॉर्ड नहीं मिला / No Submissions Found</p>
+        <p style="font-size: 0.82rem;">जब कोई छात्र क्विज़ सबमिट करेगा, उसका नाम, स्कोर और समय यहाँ दर्ज होगा।</p>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const themeToggle = document.getElementById('themeToggle');
+      const searchInput = document.getElementById('searchInput');
+      const exportCsvBtn = document.getElementById('exportCsvBtn');
+      const clearDataBtn = document.getElementById('clearDataBtn');
+      const tableBody = document.getElementById('submissionsTableBody');
+      const emptyState = document.getElementById('emptyState');
+      const tableCountText = document.getElementById('tableCountText');
+
+      // Theme toggle
+      let theme = localStorage.getItem('quiz_theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', theme);
+      themeToggle.textContent = theme === 'dark' ? '🌙' : '☀️';
+
+      themeToggle.addEventListener('click', () => {
+        theme = theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('quiz_theme', theme);
+        themeToggle.textContent = theme === 'dark' ? '🌙' : '☀️';
+      });
+
+      // Load submissions from localStorage
+      function getSubmissions() {
+        try {
+          const raw = localStorage.getItem('hits_quiz_submissions');
+          return raw ? JSON.parse(raw) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+
+      function render(filterTerm = '') {
+        const list = getSubmissions();
+        const term = filterTerm.toLowerCase().trim();
+        const filtered = term ? list.filter(item => (item.name || '').toLowerCase().includes(term)) : list;
+
+        tableBody.innerHTML = '';
+
+        if (filtered.length === 0) {
+          emptyState.style.display = 'block';
+          tableCountText.textContent = 'Showing 0 records';
+        } else {
+          emptyState.style.display = 'none';
+          tableCountText.textContent = `Showing ${filtered.length} of ${list.length} records`;
+
+          filtered.forEach((item, index) => {
+            const tr = document.createElement('tr');
+            const isPass = (item.score / (item.total || 10)) >= 0.7;
+
+            tr.innerHTML = `
+              <td style="font-weight:700; color:var(--text-muted);">${index + 1}</td>
+              <td style="font-weight:700;">👤 ${escapeHtml(item.name || 'Anonymous')}</td>
+              <td><span style="font-weight:800; font-size:1rem; color:${isPass ? 'var(--success)' : 'var(--warning)'};">${item.score}/${item.total || 10}</span></td>
+              <td>${item.percentage || Math.round(((item.score || 0) / 10) * 100)}%</td>
+              <td><span style="font-variant-numeric: tabular-nums;">⏱️ ${escapeHtml(item.timeTaken || '00:00')}</span></td>
+              <td style="font-size:0.82rem; color:var(--text-muted);">${escapeHtml(item.submittedAt || 'N/A')}</td>
+              <td>
+                <span class="status-badge ${isPass ? 'status-pass' : 'status-review'}">
+                  ${isPass ? '✅ Passed' : '⚠️ Practice'}
+                </span>
+              </td>
+              <td>
+                <button class="btn btn-secondary delete-btn" data-id="${item.id}" style="padding:0.25rem 0.6rem; font-size:0.75rem; color:var(--danger); border-color:var(--card-border);">
+                  Delete
+                </button>
+              </td>
+            `;
+            tableBody.appendChild(tr);
+          });
+        }
+
+        // Update top stats
+        updateSummaryStats(list);
+      }
+
+      function updateSummaryStats(list) {
+        const totalUsers = list.length;
+        document.getElementById('statTotalUsers').textContent = totalUsers;
+
+        if (totalUsers === 0) {
+          document.getElementById('statAvgScore').textContent = '0%';
+          document.getElementById('statHighestScore').textContent = '0/10';
+          document.getElementById('statAvgTime').textContent = '00:00';
+          return;
+        }
+
+        let totalScorePct = 0;
+        let highest = 0;
+        let totalSeconds = 0;
+
+        list.forEach(item => {
+          const score = item.score || 0;
+          const pct = item.percentage || Math.round((score / 10) * 100);
+          totalScorePct += pct;
+          if (score > highest) highest = score;
+
+          if (item.timeTaken) {
+            const parts = item.timeTaken.split(':');
+            if (parts.length === 2) {
+              totalSeconds += parseInt(parts[0], 10) * 60 + parseInt(parts[1], 10);
+            }
+          }
+        });
+
+        const avgScore = Math.round(totalScorePct / totalUsers);
+        document.getElementById('statAvgScore').textContent = `${avgScore}%`;
+        document.getElementById('statHighestScore').textContent = `${highest}/10`;
+
+        const avgSec = Math.round(totalSeconds / totalUsers);
+        const mins = Math.floor(avgSec / 60);
+        const secs = avgSec % 60;
+        document.getElementById('statAvgTime').textContent = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+      }
+
+      function escapeHtml(str) {
+        return String(str).replace(/[&<>"']/g, m => ({
+          '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+        })[m]);
+      }
+
+      // Search filter
+      searchInput.addEventListener('input', (e) => {
+        render(e.target.value);
+      });
+
+      // Delete single item
+      tableBody.addEventListener('click', (e) => {
+        const target = e.target.closest('.delete-btn');
+        if (!target) return;
+        const id = target.dataset.id;
+        if (!confirm('क्या आप इस छात्र का रिकॉर्ड हटाना चाहते हैं? (Delete this record?)')) return;
+
+        const list = getSubmissions().filter(item => String(item.id) !== String(id));
+        localStorage.setItem('hits_quiz_submissions', JSON.stringify(list));
+        render(searchInput.value);
+      });
+
+      // Clear All
+      clearDataBtn.addEventListener('click', () => {
+        const list = getSubmissions();
+        if (list.length === 0) return alert('कोई रिकॉर्ड उपलब्ध नहीं है।');
+        if (!confirm('क्या आप सभी सबमिशन रिकॉर्ड हटाना चाहते हैं? (Clear all submissions?)')) return;
+
+        localStorage.removeItem('hits_quiz_submissions');
+        render();
+      });
+
+      // Export CSV
+      exportCsvBtn.addEventListener('click', () => {
+        const list = getSubmissions();
+        if (list.length === 0) return alert('एक्सपोर्ट करने के लिए कोई रिकॉर्ड नहीं है! (No records to export)');
+
+        let csv = 'ID,Candidate Name,Score,Total,Percentage,Time Taken,Submitted At\n';
+        list.forEach(item => {
+          const name = `"${(item.name || '').replace(/"/g, '""')}"`;
+          const time = `"${item.timeTaken || ''}"`;
+          const submittedAt = `"${(item.submittedAt || '').replace(/"/g, '""')}"`;
+          csv += `${item.id},${name},${item.score},${item.total || 10},${item.percentage || 0}%,${time},${submittedAt}\n`;
+        });
+
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hits_quiz_submissions_${Date.now()}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      });
+
+      // Initial render
+      render();
+    });
+  </script>
+</body>
+</html>

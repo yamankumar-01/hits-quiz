@@ -2,15 +2,16 @@
 document.addEventListener('DOMContentLoaded', () => {
   // App State
   const state = {
+    userName: localStorage.getItem('hits_quiz_current_user') || '',
     currentIndex: 0,
     answers: {}, // { [questionId]: 'A' | 'B' | ... }
     flagged: new Set(),
     language: 'bi', // 'bi' | 'hi' | 'en'
-    mode: 'practice', // 'practice' (instant feedback) | 'exam' (reveal at end)
-    theme: 'dark',
+    mode: 'exam', // 'exam' (score shown strictly at the end) | 'practice' (instant feedback)
+    theme: localStorage.getItem('quiz_theme') || 'dark',
     sound: true,
     timeSeconds: 0,
-    timerActive: true,
+    timerActive: false,
     quizFinished: false
   };
 
@@ -25,8 +26,11 @@ document.addEventListener('DOMContentLoaded', () => {
     progressText: document.getElementById('progressText'),
     progressPercent: document.getElementById('progressPercent'),
     timerDisplay: document.getElementById('timerDisplay'),
-    scoreBadge: document.getElementById('scoreBadge'),
-    scoreText: document.getElementById('scoreText'),
+    userBadge: document.getElementById('userBadge'),
+    currentUserNameDisplay: document.getElementById('currentUserNameDisplay'),
+    nameModal: document.getElementById('nameModal'),
+    nameForm: document.getElementById('nameForm'),
+    nameInput: document.getElementById('nameInput'),
     paletteContainer: document.getElementById('paletteContainer'),
     quizCard: document.getElementById('quizCard'),
     categoryTag: document.getElementById('categoryTag'),
@@ -116,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Timer
+  // Timer: Runs every second once quiz is started
   setInterval(() => {
     if (!state.timerActive || state.quizFinished) return;
     state.timeSeconds++;
@@ -127,13 +131,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize UI
   function init() {
+    // Theme setup
+    document.documentElement.setAttribute('data-theme', state.theme);
+    el.themeToggle.textContent = state.theme === 'dark' ? '🌙' : '☀️';
+
+    // Candidate Name Setup
+    if (state.userName) {
+      el.currentUserNameDisplay.textContent = state.userName;
+      el.nameModal.style.display = 'none';
+      state.timerActive = true;
+    } else {
+      el.nameModal.style.display = 'flex';
+      state.timerActive = false;
+    }
+
     buildPalette();
     renderQuestion();
     updateStats();
     attachEventListeners();
   }
 
-  // Build Palette Navigation
+  // Build Palette Navigation (1-10)
   function buildPalette() {
     el.paletteContainer.innerHTML = '';
     quizData.forEach((q, idx) => {
@@ -151,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Update Palette Status
+  // Update Palette Status: In Exam mode, only show answered state, never reveal correctness
   function updatePalette() {
     const items = el.paletteContainer.querySelectorAll('.palette-item');
     items.forEach((item, idx) => {
@@ -172,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
             item.classList.add('incorrect');
           }
         } else {
+          // Exam Mode: simple answered indicator
           item.classList.add('answered');
         }
       }
@@ -246,10 +265,10 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
 
-      // Apply selection / evaluation state
+      // Evaluation / Selection State
       if (isAnswered) {
         if (state.mode === 'practice') {
-          // Reveal correct and wrong
+          // In Practice Mode, reveal correct/incorrect immediately
           optBtn.disabled = true;
           if (opt.id === q.correct) {
             optBtn.classList.add('correct');
@@ -257,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
             optBtn.classList.add('incorrect');
           }
         } else {
-          // Exam Mode
+          // In Exam Mode, just mark as selected
           if (opt.id === userAnswer) {
             optBtn.classList.add('selected');
           }
@@ -268,7 +287,7 @@ document.addEventListener('DOMContentLoaded', () => {
       el.optionsGrid.appendChild(optBtn);
     });
 
-    // Handle Explanation Box
+    // Explanation Box: Only show in practice mode when answered; hidden in exam mode
     if (state.mode === 'practice' && isAnswered) {
       el.explanationBox.style.display = 'flex';
       const isCorrect = userAnswer === q.correct;
@@ -327,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
     renderQuestion();
   }
 
-  // Update Stats & Progress Bar
+  // Update Stats: ONLY updates progress bar. SCORE IS NEVER DISPLAYED HERE!
   function updateStats() {
     const total = quizData.length;
     const answeredCount = Object.keys(state.answers).length;
@@ -336,25 +355,9 @@ document.addEventListener('DOMContentLoaded', () => {
     el.progressFill.style.width = `${pct}%`;
     el.progressText.textContent = `Question ${state.currentIndex + 1} of ${total}`;
     el.progressPercent.textContent = `${pct}% Completed`;
-
-    // Live score calculation
-    let correctCount = 0;
-    quizData.forEach(q => {
-      if (state.answers[q.id] === q.correct) {
-        correctCount++;
-      }
-    });
-
-    if (state.mode === 'practice') {
-      el.scoreBadge.style.display = 'flex';
-      el.scoreText.textContent = `${correctCount}/${total} Correct`;
-    } else {
-      // In exam mode, don't reveal score early
-      el.scoreBadge.style.display = 'none';
-    }
   }
 
-  // Submit Quiz & Show Results
+  // Submit Quiz & Show Final Results + Save to Admin Submissions
   function finishQuiz() {
     playSound('fanfare');
     state.quizFinished = true;
@@ -375,39 +378,69 @@ document.addEventListener('DOMContentLoaded', () => {
     const incorrect = Object.keys(state.answers).length - correct;
     const skipped = total - Object.keys(state.answers).length;
     const scorePct = Math.round((correct / total) * 100);
+    const finalTime = el.timerDisplay.textContent;
 
-    // Render Metrics
+    // Render Metrics onto Results Screen
     document.getElementById('finalScoreNumber').textContent = `${scorePct}%`;
+    const fracEl = document.getElementById('finalScoreFraction');
+    if (fracEl) fracEl.textContent = `${correct} / ${total}`;
+
     document.getElementById('metricCorrect').textContent = correct;
     document.getElementById('metricIncorrect').textContent = incorrect;
     document.getElementById('metricSkipped').textContent = skipped;
-    document.getElementById('metricTime').textContent = el.timerDisplay.textContent;
+    document.getElementById('metricTime').textContent = finalTime;
+
+    // Save to Admin Panel submissions database (localStorage)
+    const now = new Date();
+    const formattedDate = now.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) + ', ' +
+                          now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+
+    const submissionRecord = {
+      id: Date.now(),
+      name: state.userName || 'Candidate',
+      score: correct,
+      total: total,
+      percentage: scorePct,
+      timeTaken: finalTime,
+      submittedAt: formattedDate,
+      timestamp: now.getTime()
+    };
+
+    try {
+      const existing = JSON.parse(localStorage.getItem('hits_quiz_submissions') || '[]');
+      existing.unshift(submissionRecord);
+      localStorage.setItem('hits_quiz_submissions', JSON.stringify(existing));
+    } catch (e) {
+      console.error("Storage error:", e);
+    }
 
     // SVG Circle Animation (circumference = 2 * PI * 70 = 440)
     const circle = document.getElementById('circleProgress');
     const offset = 440 - (440 * scorePct) / 100;
     setTimeout(() => {
-      circle.style.strokeDashoffset = offset;
+      if (circle) circle.style.strokeDashoffset = offset;
     }, 150);
 
-    // Performance Badge & Title
+    // Performance Badge & Remarks
     const badge = document.getElementById('performanceBadge');
     const remarks = document.getElementById('performanceRemarks');
 
+    const candidateGreeting = state.userName ? `${state.userName}, ` : '';
+
     if (scorePct >= 90) {
       badge.textContent = '🏆 Master Educator / उत्कृष्ट प्रदर्शन';
-      remarks.textContent = 'अद्भुत! आपने शिक्षण व प्रस्तुति के सभी सिद्धांतों पर पूर्ण महारत प्रदर्शित की है।';
+      remarks.textContent = `शानदार ${candidateGreeting}! आपने शिक्षण व प्रस्तुति के सभी सिद्धांतों पर पूर्ण महारत प्रदर्शित की है।`;
       triggerConfetti();
     } else if (scorePct >= 70) {
       badge.textContent = '🌟 Proficient Facilitator / बहुत अच्छा';
-      remarks.textContent = 'शानदार! आपकी शिक्षण विधियों और संचार पर मजबूत पकड़ है।';
+      remarks.textContent = `बधाई ${candidateGreeting}! आपकी शिक्षण विधियों और संचार पर मजबूत पकड़ है।`;
       triggerConfetti();
     } else if (scorePct >= 50) {
       badge.textContent = '📚 Developing Educator / अच्छा प्रयास';
-      remarks.textContent = 'सराहनीय प्रयास! कुछ बिंदुओं और नियमों का दोबारा अध्ययन आपको शीर्ष पर ले जाएगा।';
+      remarks.textContent = `सराहनीय प्रयास ${candidateGreeting}! कुछ बिंदुओं और नियमों का दोबारा अध्ययन आपको शीर्ष पर ले जाएगा।`;
     } else {
       badge.textContent = '🎯 Needs Practice / और अभ्यास की आवश्यकता';
-      remarks.textContent = 'चिंता न करें, सभी उत्तरों की विस्तृत व्याख्या पढ़ें और दोबारा प्रयास करें!';
+      remarks.textContent = `${candidateGreeting}चिंता न करें, सभी उत्तरों की विस्तृत व्याख्या पढ़ें और दोबारा प्रयास करें!`;
     }
 
     renderReviewList('all');
@@ -416,6 +449,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Render Detailed Review List
   function renderReviewList(filter = 'all') {
     const list = document.getElementById('reviewList');
+    if (!list) return;
     list.innerHTML = '';
 
     quizData.forEach((q, idx) => {
@@ -462,6 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Lightweight Canvas Confetti Engine
   function triggerConfetti() {
     const canvas = el.confettiCanvas;
+    if (!canvas) return;
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
@@ -520,7 +555,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     el.resultsScreen.style.display = 'none';
     el.quizCard.style.display = 'flex';
-    document.querySelector('.stats-ribbon').style.display = 'grid';
+    document.querySelector('.stats-ribbon').style.display = 'flex';
     document.querySelector('.palette-container').style.display = 'flex';
 
     buildPalette();
@@ -529,10 +564,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Attach Event Listeners
   function attachEventListeners() {
+    // Name submission from modal
+    if (el.nameForm) {
+      el.nameForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const enteredName = el.nameInput.value.trim();
+        state.userName = enteredName || 'Candidate';
+        localStorage.setItem('hits_quiz_current_user', state.userName);
+        el.currentUserNameDisplay.textContent = state.userName;
+        el.nameModal.style.display = 'none';
+        state.timerActive = true;
+        playSound('click');
+      });
+    }
+
+    // Click candidate badge to change name
+    if (el.userBadge) {
+      el.userBadge.addEventListener('click', () => {
+        el.nameInput.value = state.userName || '';
+        el.nameModal.style.display = 'flex';
+        el.nameInput.focus();
+      });
+    }
+
     // Theme Toggle
     el.themeToggle.addEventListener('click', () => {
       state.theme = state.theme === 'dark' ? 'light' : 'dark';
       document.documentElement.setAttribute('data-theme', state.theme);
+      localStorage.setItem('quiz_theme', state.theme);
       el.themeToggle.textContent = state.theme === 'dark' ? '🌙' : '☀️';
       playSound('click');
     });
@@ -555,7 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Mode Selector (Practice vs Exam)
+    // Mode Selector (Exam vs Practice)
     el.modeBtns.forEach(btn => {
       btn.addEventListener('click', () => {
         el.modeBtns.forEach(b => b.classList.remove('active'));
@@ -606,15 +665,21 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Retake Quiz
-    document.getElementById('retakeBtn').addEventListener('click', () => {
-      playSound('click');
-      retakeQuiz();
-    });
+    const retakeBtn = document.getElementById('retakeBtn');
+    if (retakeBtn) {
+      retakeBtn.addEventListener('click', () => {
+        playSound('click');
+        retakeQuiz();
+      });
+    }
 
     // Print / Save Scorecard
-    document.getElementById('printBtn').addEventListener('click', () => {
-      window.print();
-    });
+    const printBtn = document.getElementById('printBtn');
+    if (printBtn) {
+      printBtn.addEventListener('click', () => {
+        window.print();
+      });
+    }
 
     // Review Filters
     document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -627,7 +692,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Keyboard Shortcuts (1-4 or A-D for options, Left/Right arrow for nav, F for flag)
     window.addEventListener('keydown', (e) => {
-      if (state.quizFinished) return;
+      if (state.quizFinished || el.nameModal.style.display === 'flex') return;
 
       const q = quizData[state.currentIndex];
       const key = e.key.toUpperCase();

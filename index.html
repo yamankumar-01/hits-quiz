@@ -44,8 +44,8 @@
 
           <!-- Mode Switcher -->
           <div class="segmented-control" role="group" aria-label="Mode Selector">
-            <button class="seg-btn active" data-mode="practice" title="Get instant explanations after selecting an answer">⚡ Practice</button>
-            <button class="seg-btn" data-mode="exam" title="Take as timed exam, see score at the end">📝 Exam</button>
+            <button class="seg-btn active" data-mode="exam" title="Exam Mode: score is shown at the end">📝 Exam</button>
+            <button class="seg-btn" data-mode="practice" title="Practice Mode: instant explanations">⚡ Practice</button>
           </div>
         </div>
 
@@ -55,6 +55,9 @@
 
           <!-- Dark/Light Theme Toggle -->
           <button id="themeToggle" class="icon-btn" title="Toggle Dark/Light Mode" aria-label="Toggle Theme">🌙</button>
+
+          <!-- Admin Panel Link -->
+          <a href="admin.html" class="icon-btn" title="👑 Admin Panel (स्कोर व सबमिशन रिकॉर्ड)" aria-label="Admin Dashboard" style="text-decoration: none;">👑</a>
         </div>
       </div>
     </header>
@@ -72,17 +75,36 @@
       </div>
 
       <div class="stats-badges">
+        <div class="timer-badge" id="userBadge" style="color: var(--accent); cursor: pointer;" title="Candidate Name (Click to change)">
+          <span>👤</span>
+          <span id="currentUserNameDisplay">Candidate</span>
+        </div>
+
         <div class="timer-badge" title="Time elapsed">
           <span>⏱️</span>
           <span id="timerDisplay">00:00</span>
         </div>
-
-        <div class="score-badge" id="scoreBadge" title="Current Score (Practice Mode)">
-          <span>🎯</span>
-          <span id="scoreText">0/10 Correct</span>
-        </div>
       </div>
     </section>
+
+    <!-- Candidate Name Input Modal -->
+    <div id="nameModal" class="modal-backdrop" style="display: flex;">
+      <div class="modal-card">
+        <div class="brand-icon" style="margin: 0 auto 0.75rem;">🎓</div>
+        <h2 style="font-size: 1.35rem; font-weight: 800; text-align: center;">HITS 10 MCQ Assessment</h2>
+        <p style="font-size: 0.85rem; color: var(--text-muted); text-align: center; margin-top: 0.25rem;">
+          कृपया अपना नाम दर्ज करें / Enter your name to start
+        </p>
+
+        <form id="nameForm" style="margin-top: 1.25rem; display: flex; flex-direction: column; gap: 0.85rem;">
+          <input type="text" id="nameInput" class="search-input" style="width: 100%; border-radius: 12px; padding: 0.8rem 1rem;" placeholder="उदा. Yaman Kumar (Candidate Name)" required autofocus>
+          
+          <button type="submit" class="btn btn-primary" style="width: 100%;">
+            Start Assessment (क्विज़ शुरू करें) 🚀
+          </button>
+        </form>
+      </div>
+    </div>
 
     <!-- Question Jump Palette (1-10) -->
     <nav class="palette-container" id="paletteContainer" aria-label="Question Navigation"></nav>
@@ -157,6 +179,10 @@
           <span class="score-circle-number" id="finalScoreNumber">0%</span>
           <span class="score-circle-label">Score / अंक</span>
         </div>
+      </div>
+
+      <div style="font-size: 1.15rem; font-weight: 800; color: var(--text-main); margin-top: -0.5rem;">
+        Final Score (अंतिम परिणाम): <span id="finalScoreFraction" style="color: #818cf8;">0 / 10</span>
       </div>
 
       <!-- Detailed Metrics Grid -->
